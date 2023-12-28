@@ -57,11 +57,11 @@
             </div>
           </el-form-item>
           <el-form-item>
-            <el-button
+            <!-- <el-button
               type="primary"
               style="width: 46%"
               @click="checkInit"
-            >前往初始化</el-button>
+            >前往初始化</el-button> -->
             <el-button
               type="primary"
               style="width: 46%; margin-left: 8%"
@@ -71,7 +71,7 @@
         </el-form>
       </div>
       <div class="login_panle_right" />
-      <div class="login_panle_foot">
+      <!-- <div class="login_panle_foot">
         <div class="links">
           <a href="http://doc.henrongyi.top/" target="_blank">
             <img src="@/assets/docs.png" class="link-icon">
@@ -89,7 +89,7 @@
         <div class="copyright">
           <bootomInfo />
         </div>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>

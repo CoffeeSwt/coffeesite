@@ -5,7 +5,7 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/model/dayz"
 )
 
-type DayzItemsSearch struct {
-	dayz.DayzItems
+type DayzItemReq struct {
 	request.PageInfo
+	dayz.DayzItem
 }

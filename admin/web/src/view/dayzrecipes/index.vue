@@ -4,15 +4,7 @@
     </div>
 </template>
 <script setup lang="js">
-import { findDayzItems } from '@/api/dayzItems'
-import { onMounted } from 'vue';
-console.log(findDayzItems)
-onMounted(async () => {
-    const res = await findDayzItems({
-        ID: 1
-    })
-    console.log(res)
-})
+
 </script>
   
 <style lang="scss" scoped>

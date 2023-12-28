@@ -71,10 +71,10 @@ hua-wei-obs:
   access-key: you-access-key
   secret-key: you-secret-key
 jwt:
-  buffer-time: 86400
+  signing-key: 00e824f1-bb6e-49dc-afea-5c05617c924b
   expires-time: 604800
+  buffer-time: 86400
   issuer: qmPlus
-  signing-key: 856105ca-f2e9-42ac-8f8b-24e476b60b6f
 local:
   path: uploads/file
 mysql:
@@ -100,12 +100,12 @@ pgsql:
   log-mode: ""
   log-zap: false
 qiniu:
-  zone: ZoneHuaDong
-  bucket: ""
+  zone: ZoneHuanan
+  bucket: coffeesite
   img-path: ""
   use-https: false
-  access-key: ""
-  secret-key: ""
+  access-key: EcmnF7Cuw6LAi2Onvj9BYo3M5fu8NcC80oqnSdiZ
+  secret-key: '****************************************'
   use-cdn-domains: false
 redis:
   db: 0
@@ -141,7 +141,7 @@ zap:
   format: console
   prefix: '[github.com/flipped-aurora/gin-vue-admin/server]'
   director: log
-  showLine: true
+  showLine: false
   encode-level: LowercaseColorLevelEncoder
   stacktrace-key: stacktrace
   log-in-console: true
