@@ -1,10 +1,10 @@
 <template>
     <div class="main-box">
-        <ContentBox>111</ContentBox>
+        <slot></slot>
+       
     </div>
 </template>
 <script setup lang="js">
-import ContentBox from '@/components/global/ContentBox.vue'
 
 </script>
   

@@ -16,11 +16,25 @@ import { store } from '@/store/index'
 import App from './App.vue'
 const app = createApp(App)
 app.config.productionTip = false
-
-app.use(run)
+const elBlur = (el) => {
+  return () => el?.blur()
+}
+app
+  .use(run)
   .use(auth)
   .use(store)
   .use(router)
-  .use(ElementPlus, { locale: zhCn }).mount('#app')
+  .use(ElementPlus, { locale: zhCn })
+  .directive('blur', {
+    created(el, binding, vnode) {
+      if (vnode?.type === 'button') {
+        el.addEventListener('click', elBlur(el))
+      }
+    },
+    unmounted(el) {
+      el.removeEventListener('click', elBlur(el))
+    },
+  })
+  .mount('#app')
 
 export default app
