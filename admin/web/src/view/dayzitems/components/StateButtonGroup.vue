@@ -42,7 +42,7 @@ const getActiveItem = () => {
     return activeItem.value
 }
 const selectAll = () => {
-    activeItem.value = props.contents
+    activeItem.value = props.contents.map(i => i)
 }
 const clearSelect = () => {
     activeItem.value = []
