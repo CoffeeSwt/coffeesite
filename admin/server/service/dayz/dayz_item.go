@@ -35,7 +35,7 @@ func (dayzItemService *DayzItemService) GetDayzItemByID(id uint) (err error, ite
 }
 
 // GetDayzItemQuery 查询物品
-func (dayzItemService *DayzItemService) GetDayzItemQuery(item dayz.DayzItem) (err error, items []dayz.DayzItem) {
+func (dayzItemService *DayzItemService) GetDayzItemQuery(item dayzItemReq.DayzItemQuery) (err error, items []dayz.DayzItem) {
 	// 创建db
 	db := global.GVA_DB.Model(&dayz.DayzItem{})
 	db = db.Preload("Imgs")
@@ -43,13 +43,16 @@ func (dayzItemService *DayzItemService) GetDayzItemQuery(item dayz.DayzItem) (er
 	if item.Name != "" {
 		db = db.Where("name = ?", item.Name)
 	}
+	if len(item.Category) > 0 {
+		db = db.Where("category in ?", item.Category)
+	}
 
 	err = db.Find(&items).Error
 	return err, items
 }
 
 // GetPageInfosInfoList 分页获取DayzItem记录
-func (dayzItemService *DayzItemService) GetDayzItemList(item dayzItemReq.DayzItemReq) (err error, dayzItemss []dayz.DayzItem, total int64) {
+func (dayzItemService *DayzItemService) GetDayzItemList(item dayzItemReq.DayzItemPageQuery) (err error, dayzItemss []dayz.DayzItem, total int64) {
 	limit := item.PageSize
 	offset := item.PageSize * (item.Page - 1)
 	// 创建db
@@ -58,6 +61,9 @@ func (dayzItemService *DayzItemService) GetDayzItemList(item dayzItemReq.DayzIte
 	// 如果有条件搜索 下方会自动创建搜索语句
 	if item.Name != "" {
 		db = db.Where("name = ?", item.Name)
+	}
+	if len(item.Category) > 0 {
+		db = db.Where("category in ?", item.Category)
 	}
 	err = db.Count(&total).Error
 	if err != nil {

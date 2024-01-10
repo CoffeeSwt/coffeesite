@@ -3,7 +3,7 @@ package dayz
 import "github.com/flipped-aurora/gin-vue-admin/server/global"
 
 type DayzRecipe struct {
-	global.COFFEE_MODEL
+	global.GVA_MODEL
 	Name string `json:"name" gorm:"comment:输入组名称"`
 	Info string `json:"info" gorm:"comment:输入组信息"`
 

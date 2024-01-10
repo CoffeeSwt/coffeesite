@@ -1,8 +1,9 @@
 <template>
     <div class="main-box">
         <ContentBox>
-            <StateButtonGroup ref="dayzItemCategoryButtonRef" :contents="dayzItemCategoryButtons"></StateButtonGroup>
+            <StateButtonGroup ref="dayzItemCategoryButtonRef" @submit="setDayzItemsTableData"></StateButtonGroup>
         </ContentBox>
+
         <ContentBox>
             <div class="control-buttons">
                 <div class="add-item-button" @click="addNewItemDialogVisible = true">
@@ -18,22 +19,20 @@
                     <span style="margin-left: 4px;">删除选中</span>
                 </div>
             </div>
-        </ContentBox>
 
-        <ContentBox>
-            <el-table ref="dayzItemsTableRef" :data="dayzItemsTableData" style="width: 100%">
+            <el-table ref="dayzItemsTableRef" class="el-table-main" :data="dayzItemsTableData" table-layout="auto">
                 <el-table-column type="selection"></el-table-column>
 
                 <el-table-column prop="ID" label="ID" width="40" />
-                <el-table-column prop="name" label="物品名称" width="100" />
-                <el-table-column prop="category" label="类别" width="200" />
-                <el-table-column prop="info" label="信息" width="200" />
+                <el-table-column prop="name" label="物品名称" />
+                <el-table-column prop="category" label="类别" />
+                <el-table-column prop="info" label="信息" />
                 <el-table-column label="图片" width="240">
                     <template #default="scope">
 
                     </template>
                 </el-table-column>
-                <el-table-column fixed="right" label="操作" width="240">
+                <el-table-column fixed="right" label="操作">
                     <template #default="scope">
                         <el-button class="row-button" :icon="Edit" type="primary" size="small"
                             @click="editRow(scope.$index)">
@@ -60,42 +59,40 @@
                             :value="item.value" />
                     </el-select>
                 </el-form-item>
+                <el-form-item label="最大数量">
+                    <el-input-number v-model="addNewItemForm.maxQuantity" :steps="10" />
+                </el-form-item>
                 <el-form-item label="物品信息">
                     <el-input v-model="addNewItemForm.info" :autosize="{ minRows: 4, maxRows: 8 }" type="textarea"
                         placeholder="请输入物品信息" />
                 </el-form-item>
                 <el-form-item label="物品图片">
-                    <div class="img-upload-form-item">
+                    <el-upload action="#" list-type="picture-card" v-model:file-list="imgUploadList" :auto-upload="false"
+                        accept=".png, .jpg, .jpeg">
+                        <el-icon>
+                            <Plus />
+                        </el-icon>
 
-                        <el-upload action="#" list-type="picture-card" v-model:file-list="imgUploadList"
-                            :auto-upload="false" accept=".png, .jpg, .jpeg">
-                            <el-icon>
-                                <Plus />
-                            </el-icon>
-
-                            <template #file="{ file }">
-                                <img class="el-upload-list__item-thumbnail" :src="file.url" alt="" />
-                                <span class="el-upload-list__item-actions">
-                                    <span class="el-upload-list__item-preview" @click="handlePictureCardPreview(file)">
-                                        <el-icon><zoom-in /></el-icon>
-                                    </span>
-                                    <span class="el-upload-list__item-delete" @click="handleRemove(file)">
-                                        <el-icon>
-                                            <Delete />
-                                        </el-icon>
-                                    </span>
+                        <template #file="{ file }">
+                            <img class="el-upload-list__item-thumbnail" :src="file.url" alt="" />
+                            <span class="el-upload-list__item-actions">
+                                <span class="el-upload-list__item-preview" @click="handlePictureCardPreview(file)">
+                                    <el-icon><zoom-in /></el-icon>
                                 </span>
-                            </template>
-                            <template #tip>
-                                <div class="el-upload__tip">
-                                    请上传4M以内的 png/jpeg 格式图片
-                                </div>
-                            </template>
-                        </el-upload>
-                    </div>
-
+                                <span class="el-upload-list__item-delete" @click="handleRemove(file)">
+                                    <el-icon>
+                                        <Delete />
+                                    </el-icon>
+                                </span>
+                            </span>
+                        </template>
+                        <template #tip>
+                            <div class="el-upload__tip">
+                                请上传4M以内的 png/jpeg 格式图片
+                            </div>
+                        </template>
+                    </el-upload>
                 </el-form-item>
-
             </el-form>
             <footer class="info-form-footer">
                 <el-button type="default" size="large" @click="cancelAddNewItemForm">取消</el-button>
@@ -108,6 +105,7 @@
     </div>
 </template>
 <script setup lang="js">
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { getDict } from '@/utils/dictionary'
 import ContentBox from '@/components/global/ContentBox.vue'
 import StateButtonGroup from '@/view/dayzitems/components/StateButtonGroup.vue';
@@ -116,21 +114,23 @@ import {
     ref,
     computed,
     watchEffect,
-    reactive
+    reactive,
+    onMounted
 } from 'vue'
+import * as dayzItemApi from '@/api/dayz/dayzitem'
 
 //物品类别
 const dayzItemCategory = ref([])
-watchEffect(async () => {
-    dayzItemCategory.value = await getDict('dayzItemCategory')
-})
-//物品类别按钮内容
-const dayzItemCategoryButtons = computed(() => {
-    return dayzItemCategory.value.map(i => i.label)
-})
+const getLabelByIndex = (index) => {
+    return dayzItemCategory.value.find((i) => i.value == index).label
+}
 //物品类别按钮Ref
 const dayzItemCategoryButtonRef = ref(null)
-
+watchEffect(async () => {
+    dayzItemCategory.value = await getDict('dayzItemCategory')
+    dayzItemCategoryButtonRef.value.setContents(dayzItemCategory.value.map(i => i.label))
+})
+//分页
 const pageInfo = reactive({
     pageSize: 10,
     total: null,
@@ -139,41 +139,94 @@ const pageInfo = reactive({
 
 //添加物品的表单
 const addNewItemDialogVisible = ref(false)
-const addNewItemForm = reactive({
+const addNewItemFormDefault = {
     name: '',
     category: '',
-    info: ''
+    info: '',
+    maxQuantity: 0
+}
+const addNewItemForm = reactive({
+    ...addNewItemFormDefault
 })
 
+//清空表单项：新增物品的表单
 const resetAddNewItemForm = () => {
     Object.keys(addNewItemForm).forEach((key) => {
-        if (typeof addNewItemForm[key] == 'string') {
-            addNewItemForm[key] = ''
+        addNewItemForm[key] = addNewItemFormDefault[key]
+    })
+    imgUploadList.value = []
+    previewImgDialogUrl.value = ''
+}
+//验证表单:新增物品
+const checkAddNewItemForm = () => {
+    if (addNewItemForm.name == '') return false
+    if (addNewItemForm.category == 0) return false
+    return true
+}
+//提交表单：新增物品的表单
+const submitAddNewItemForm = async () => {
+    if (!checkAddNewItemForm()) {
+        ElMessage({
+            message: '请填写所有必填项',
+            type: 'warning',
+        })
+        return
+    }
+    await dayzItemApi.createDayzItem(addNewItemForm)
+    addNewItemDialogVisible.value = false
+    resetAddNewItemForm()
+}
+
+//取消表单对话框：新增物品的表单
+const cancelAddNewItemForm = () => {
+    const confirmCancel = () => {
+        addNewItemDialogVisible.value = false
+        resetAddNewItemForm()
+    }
+    const hasInputForm = computed(() => {
+        if (Object.values(addNewItemForm).filter((i) => !(i == '' || i == 0)).length > 0) return true
+        if (imgUploadList.value.length > 0) return true
+        return false
+    })
+
+    if (!hasInputForm.value) { confirmCancel(); return }
+    ElMessageBox.confirm(
+        '确认取消吗？填写的内容不会保存',
+        '',
+        {
+            confirmButtonText: '确认',
+            cancelButtonText: '取消',
+            type: 'warning',
         }
-        if (typeof addNewItemForm[key] == 'number') {
-            addNewItemForm[key] = 0
+    ).then(() => {
+        confirmCancel()
+    })
+}
+const useQueryParm = () => {
+    const category = dayzItemCategoryButtonRef.value.getActiveItem()
+    const categoryIndex = category.map((label) => dayzItemCategory.value.findIndex((item) => item.label == label) + 1)
+    return {
+        pageSize: pageInfo.pageSize,
+        page: 1,
+        category: categoryIndex
+    }
+}
+
+const dayzItemsTableRef = ref(null)
+const dayzItemsTableData = ref([])
+
+const setDayzItemsTableData = async () => {
+    const res = await dayzItemApi.getDayzItem(useQueryParm())
+    const items = res.data.items
+    dayzItemsTableData.value = items.map((i) => {
+        return {
+            ...i,
+            category: getLabelByIndex(i.category),
         }
     })
 }
-const submitAddNewItemForm = () => {
-    addNewItemDialogVisible.value = false
-    resetAddNewItemForm()
-}
-const cancelAddNewItemForm = () => {
-    addNewItemDialogVisible.value = false
-    resetAddNewItemForm()
-}
-const queryParm = computed(() => {
-    const category = dayzItemCategoryButtonRef.value.getActiveItem()
-    return {
-        pageSize: pageInfo.pageSize,
-        page: 1
-    }
-})
-const dayzItemsTableRef = ref(null)
-const dayzItemsTableData = ref([])
-watchEffect(() => {
-
+onMounted(() => {
+    setDayzItemsTableData()
 })
 const editRow = (index) => {
     console.log(index)
@@ -221,6 +274,7 @@ const handleRemove = (file) => {
     height: 44px;
     border-radius: 8px;
 
+    margin-bottom: 24px;
 }
 
 .add-item-button:hover {
@@ -260,13 +314,6 @@ const handleRemove = (file) => {
 .prview-Img {
     width: 100%;
     height: 100%;
-}
-
-.img-upload-form-item {
-    .upload-tips {
-        font-size: 14px;
-        color: #858585;
-    }
 }
 </style>
   

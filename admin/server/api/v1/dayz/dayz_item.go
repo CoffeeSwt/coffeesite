@@ -65,7 +65,7 @@ func (dayzItemApi *DayzItemApi) DeleteDayzItemByIds(c *gin.Context) {
 func (dayzItemApi *DayzItemApi) UpdateDayzItem(c *gin.Context) {
 	var dayzItem dayz.DayzItem
 	_ = c.ShouldBindJSON(&dayzItem)
-	if err := utils.Verify(dayzItem.COFFEE_MODEL, utils.IdVerify); err != nil {
+	if err := utils.Verify(dayzItem.GVA_MODEL, utils.IdVerify); err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
@@ -89,7 +89,7 @@ func (dayzItemApi *DayzItemApi) UpdateDayzItem(c *gin.Context) {
 func (dayzItemApi *DayzItemApi) GetDayzItemByID(c *gin.Context) {
 	var dayzItem dayz.DayzItem
 	_ = c.ShouldBindQuery(&dayzItem)
-	if err := utils.Verify(dayzItem.COFFEE_MODEL, utils.IdVerify); err != nil {
+	if err := utils.Verify(dayzItem.GVA_MODEL, utils.IdVerify); err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
@@ -102,7 +102,7 @@ func (dayzItemApi *DayzItemApi) GetDayzItemByID(c *gin.Context) {
 	}
 }
 
-// GetDayzItem 根据Name
+// GetDayzItem
 // @Tags DayzItem
 // @Summary 根据ID获取物品
 // @Security ApiKeyAuth
@@ -112,13 +112,9 @@ func (dayzItemApi *DayzItemApi) GetDayzItemByID(c *gin.Context) {
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"获取成功"}"
 // @Router /dayz/getDayzItemByID [get]
 func (dayzItemApi *DayzItemApi) GetDayzItem(c *gin.Context) {
-	var dayzItem dayz.DayzItem
-	_ = c.ShouldBindQuery(&dayzItem)
-	if err := utils.Verify(dayzItem.COFFEE_MODEL, utils.IdVerify); err != nil {
-		response.FailWithMessage(err.Error(), c)
-		return
-	}
-	err, data := dayzItemService.GetDayzItemByID(dayzItem.ID)
+	var dayzItem dayzItemReq.DayzItemQuery
+	_ = c.ShouldBindJSON(&dayzItem)
+	err, data := dayzItemService.GetDayzItemQuery(dayzItem)
 	if err != nil {
 		global.GVA_LOG.Error("获取失败!", zap.Error(err))
 		response.FailWithMessage("获取失败", c)
@@ -135,8 +131,8 @@ func (dayzItemApi *DayzItemApi) GetDayzItem(c *gin.Context) {
 // @Param data query dayzItemReq.DayzItemReq
 // @Router /dayz/getDayzItemList [get]
 func (dayzItemApi *DayzItemApi) GetDayzItemList(c *gin.Context) {
-	var pageInfo dayzItemReq.DayzItemReq
-	_ = c.ShouldBindQuery(&pageInfo)
+	var pageInfo dayzItemReq.DayzItemPageQuery
+	_ = c.ShouldBindJSON(&pageInfo)
 	if err, list, total := dayzItemService.GetDayzItemList(pageInfo); err != nil {
 		global.GVA_LOG.Error("获取失败!", zap.Error(err))
 		response.FailWithMessage("获取失败", c)

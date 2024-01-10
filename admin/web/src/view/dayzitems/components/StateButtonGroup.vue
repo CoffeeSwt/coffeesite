@@ -1,8 +1,9 @@
 <template>
     <div class="main-wrapper">
         <div class="main-wrapper">
-            <div class="button-item select-all" @click="selectAll">全部</div>
-            <div class="button-item clear-select" @click="clearSelect">清空</div>
+            <div class="button-item select-all" :class="{ 'active-button-select-all': allItemsSelected }"
+                @click="selectAll">全部
+            </div>
             <template v-for="item in contents">
                 <div class="button-item" :class="{ 'active-button': activeItem.includes(item) }"
                     @click="changeActive(item)">
@@ -17,20 +18,24 @@
                 </el-icon>
             </div>
         </el-tooltip>
-
     </div>
 </template>
 <script setup lang="js">
-import { ref } from 'vue';
-const props = defineProps({
-    contents: {
-        type: Array,
-        default: []
-    }
-})
+import { computed, ref } from 'vue';
+const contents = ref([])
 const emit = defineEmits(['submit'])
 const activeItem = ref([])
+const allItemsSelected = computed(() => {
+    let selectAll = true
+    contents.value.forEach((item) => {
+        if (!activeItem.value.includes(item)) selectAll = false
+    })
+    return selectAll
+})
 const changeActive = (item) => {
+    //判断是否处于全选状态
+    if (allItemsSelected.value) clearAll()
+    //判断是否已经选中
     const i = activeItem.value.indexOf(item)
     if (i == -1) {
         activeItem.value.push(item)
@@ -42,18 +47,25 @@ const getActiveItem = () => {
     return activeItem.value
 }
 const selectAll = () => {
-    activeItem.value = props.contents.map(i => i)
+    activeItem.value = contents.value.map(i => i)
 }
-const clearSelect = () => {
+const clearAll = () => {
     activeItem.value = []
 }
 
+const setContents = (content) => {
+    contents.value = content
+    selectAll()
+}
+
 const submit = () => {
-    emit('submit', activeItem.value)
+    emit('submit')
 }
 
 defineExpose({
-    getActiveItem
+    getActiveItem,
+    selectAll,
+    setContents
 })
 </script>
   
@@ -81,15 +93,6 @@ defineExpose({
     border-radius: 8px 0 0 8px;
 }
 
-.button-item:nth-child(2) {
-    border-radius: 0 8px 8px 0;
-    margin-right: 8px;
-}
-
-.button-item:nth-child(3) {
-    border-radius: 8px 0 0 8px;
-}
-
 .button-item:last-child {
     border-radius: 0 8px 8px 0;
     margin-right: 8px;
@@ -105,19 +108,9 @@ defineExpose({
     color: #67c23a;
 }
 
-.select-all:hover {
+.active-button-select-all {
     background-color: #67c23a;
     color: #f0f9eb;
-}
-
-.clear-select {
-    background-color: #fdf6ec;
-    color: #eebe77;
-}
-
-.clear-select:hover {
-    background-color: #eebe77;
-    color: #fdf6ec;
 }
 
 .submit-button {
