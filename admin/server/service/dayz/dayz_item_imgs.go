@@ -1,19 +1,21 @@
 package dayz
 
 import (
+	"errors"
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/common/request"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/dayz"
-	"github.com/flipped-aurora/gin-vue-admin/server/model/example"
+	"github.com/flipped-aurora/gin-vue-admin/server/utils/upload"
+	"mime/multipart"
 )
 
-type DayzItemImgsUploadAndDownloadService struct{}
+type DayzItemImgsService struct{}
 
-func (e *DayzItemImgsUploadAndDownloadService) Upload(file dayz.DayzItemImg) error {
+func (e *DayzItemImgsService) Upload(file dayz.DayzItemImg) error {
 	return global.GVA_DB.Create(&file).Error
 }
 
-func (e *DayzItemImgsUploadAndDownloadService) FindFile(id uint) (error, dayz.DayzItemImg) {
+func (e *DayzItemImgsService) FindFile(id uint) (error, dayz.DayzItemImg) {
 	var file dayz.DayzItemImg
 	err := global.GVA_DB.Where("id = ?", id).First(&file).Error
 	return err, file
@@ -25,19 +27,19 @@ func (e *DayzItemImgsUploadAndDownloadService) FindFile(id uint) (error, dayz.Da
 //@param: file model.ExaFileUploadAndDownload
 //@return: err error
 
-//func (e *DayzItemImgsUploadAndDownloadService) DeleteFile(file dayz.DayzItemImg) (err error) {
-//	var fileFromDb dayz.DayzItemImg
-//	err, fileFromDb = e.FindFile(file.ID)
-//	if err != nil {
-//		return
-//	}
-//	oss := upload.NewOss()
-//	if err = oss.DeleteFile(fileFromDb.Key); err != nil {
-//		return errors.New("文件删除失败")
-//	}
-//	err = global.GVA_DB.Where("id = ?", file.ID).Unscoped().Delete(&file).Error
-//	return err
-//}
+func (e *DayzItemImgsService) DeleteFile(file dayz.DayzItemImg) (err error) {
+	var fileFromDb dayz.DayzItemImg
+	err, fileFromDb = e.FindFile(file.ID)
+	if err != nil {
+		return
+	}
+	oss := upload.NewOss()
+	if err = oss.DeleteFile(fileFromDb.Key); err != nil {
+		return errors.New("文件删除失败")
+	}
+	err = global.GVA_DB.Where("id = ?", file.ID).Unscoped().Delete(&file).Error
+	return err
+}
 
 //@author: [piexlmax](https://github.com/piexlmax)
 //@function: GetFileRecordInfoList
@@ -45,11 +47,11 @@ func (e *DayzItemImgsUploadAndDownloadService) FindFile(id uint) (error, dayz.Da
 //@param: info request.PageInfo
 //@return: err error, list interface{}, total int64
 
-func (e *DayzItemImgsUploadAndDownloadService) GetFileRecordInfoList(info request.PageInfo) (err error, list interface{}, total int64) {
+func (e *DayzItemImgsService) GetFileRecordInfoList(info request.PageInfo) (err error, list interface{}, total int64) {
 	limit := info.PageSize
 	offset := info.PageSize * (info.Page - 1)
-	db := global.GVA_DB.Model(&example.ExaFileUploadAndDownload{})
-	var fileLists []example.ExaFileUploadAndDownload
+	db := global.GVA_DB.Model(&dayz.DayzItemImg{})
+	var fileLists []dayz.DayzItemImg
 	err = db.Count(&total).Error
 	if err != nil {
 		return
@@ -64,21 +66,21 @@ func (e *DayzItemImgsUploadAndDownloadService) GetFileRecordInfoList(info reques
 //@param: header *multipart.FileHeader, noSave string
 //@return: err error, file model.ExaFileUploadAndDownload
 
-//func (e *DayzItemImgsUploadAndDownloadService) UploadFile(header *multipart.FileHeader, noSave string) (err error, file example.ExaFileUploadAndDownload) {
-//	oss := upload.NewOss()
-//	filePath, key, uploadErr := oss.UploadFile(header)
-//	if uploadErr != nil {
-//		panic(err)
-//	}
-//	if noSave == "0" {
-//		s := strings.Split(header.Filename, ".")
-//		f := example.ExaFileUploadAndDownload{
-//			Url:  filePath,
-//			Name: header.Filename,
-//			Tag:  s[len(s)-1],
-//			Key:  key,
-//		}
-//		return e.Upload(f), f
-//	}
-//	return
-//}
+func (e *DayzItemImgsService) UploadFile(header *multipart.FileHeader, noSave string) (err error, file dayz.DayzItemImg) {
+	oss := upload.NewOss()
+	filePath, key, uploadErr := oss.UploadFile(header)
+	if uploadErr != nil {
+		panic(err)
+	}
+	if noSave == "0" {
+		//s := strings.Split(header.Filename, ".")
+		f := dayz.DayzItemImg{
+			Path: filePath,
+			Name: header.Filename,
+			//Tag:  s[len(s)-1],
+			Key: key,
+		}
+		return e.Upload(f), f
+	}
+	return
+}

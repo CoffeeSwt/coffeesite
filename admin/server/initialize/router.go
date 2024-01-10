@@ -82,6 +82,7 @@ func Routers() *gin.Engine {
 	{
 		dayzRouter := router.RouterGroupApp.Dayz
 		dayzRouter.InitDayzItemRouter(PrivateGroup)
+		dayzRouter.InitDayzItemImgRouter(PrivateGroup)
 	}
 
 	InstallPlugin(PublicGroup, PrivateGroup) // 安装插件

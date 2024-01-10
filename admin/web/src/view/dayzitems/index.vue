@@ -12,7 +12,7 @@
                     </el-icon>
                     <span style="margin-left: 4px;">新增物品</span>
                 </div>
-                <div class="delete-item-button">
+                <div class="delete-item-button" @click="deletItemsSelected">
                     <el-icon :size="14">
                         <Delete />
                     </el-icon>
@@ -20,7 +20,8 @@
                 </div>
             </div>
 
-            <el-table ref="dayzItemsTableRef" class="el-table-main" :data="dayzItemsTableData" table-layout="auto">
+            <el-table ref="dayzItemsTableRef" class="el-table-main" :data="dayzItemsTableData" table-layout="auto"
+                @selection-change="handleSelectionChange">
                 <el-table-column type="selection"></el-table-column>
 
                 <el-table-column prop="ID" label="ID" width="40" />
@@ -34,12 +35,10 @@
                 </el-table-column>
                 <el-table-column fixed="right" label="操作">
                     <template #default="scope">
-                        <el-button class="row-button" :icon="Edit" type="primary" size="small"
-                            @click="editRow(scope.$index)">
+                        <el-button class="row-button" :icon="Edit" type="primary" size="small" @click="editRow(scope)">
                             查看/编辑
                         </el-button>
-                        <el-button class="row-button" :icon="Delete" type="danger" size="small"
-                            @click="deleteRow(scope.$index)">
+                        <el-button class="row-button" :icon="Delete" type="danger" size="small" @click="deleteRow(scope)">
                             删除
                         </el-button>
                     </template>
@@ -60,15 +59,15 @@
                     </el-select>
                 </el-form-item>
                 <el-form-item label="最大数量">
-                    <el-input-number v-model="addNewItemForm.maxQuantity" :steps="10" />
+                    <el-input-number v-model="addNewItemForm.maxQuantity" :step="10" />
                 </el-form-item>
                 <el-form-item label="物品信息">
                     <el-input v-model="addNewItemForm.info" :autosize="{ minRows: 4, maxRows: 8 }" type="textarea"
                         placeholder="请输入物品信息" />
                 </el-form-item>
                 <el-form-item label="物品图片">
-                    <el-upload action="#" list-type="picture-card" v-model:file-list="imgUploadList" :auto-upload="false"
-                        accept=".png, .jpg, .jpeg">
+                    <el-upload ref="uploadRef" :action="`${path}/dayzItemImg/uploadFile`" list-type="picture-card"
+                        v-model:file-list="imgUploadList" :auto-upload="false" accept=".png, .jpg, .jpeg">
                         <el-icon>
                             <Plus />
                         </el-icon>
@@ -115,10 +114,11 @@ import {
     computed,
     watchEffect,
     reactive,
-    onMounted
+    onMounted,
 } from 'vue'
 import * as dayzItemApi from '@/api/dayz/dayzitem'
-
+import * as dayzItemImgApi from '@/api/dayz/dayzItemImg'
+const path = import.meta.env.VITE_BASE_API
 //物品类别
 const dayzItemCategory = ref([])
 const getLabelByIndex = (index) => {
@@ -172,9 +172,15 @@ const submitAddNewItemForm = async () => {
         })
         return
     }
+    uploadFile()
     await dayzItemApi.createDayzItem(addNewItemForm)
     addNewItemDialogVisible.value = false
     resetAddNewItemForm()
+    setDayzItemsTableData()
+}
+const uploadRef = ref(null)
+const uploadFile = () => {
+    uploadRef.value.submit()
 }
 
 //取消表单对话框：新增物品的表单
@@ -202,6 +208,7 @@ const cancelAddNewItemForm = () => {
         confirmCancel()
     })
 }
+
 const useQueryParm = () => {
     const category = dayzItemCategoryButtonRef.value.getActiveItem()
     const categoryIndex = category.map((label) => dayzItemCategory.value.findIndex((item) => item.label == label) + 1)
@@ -212,9 +219,24 @@ const useQueryParm = () => {
     }
 }
 
+const deletItemByIDs = (ids) => {
+    ElMessageBox.confirm(
+        '确认删除吗？',
+        '',
+        {
+            confirmButtonText: '确认',
+            cancelButtonText: '取消',
+            type: 'warning',
+        }
+    ).then(async () => {
+        await dayzItemApi.deleteDayzItemByIds({ ids })
+        setDayzItemsTableData()
+    })
+}
+
 const dayzItemsTableRef = ref(null)
 const dayzItemsTableData = ref([])
-
+const dayzItemsTableSelection = ref([])
 const setDayzItemsTableData = async () => {
     const res = await dayzItemApi.getDayzItem(useQueryParm())
     const items = res.data.items
@@ -228,11 +250,19 @@ const setDayzItemsTableData = async () => {
 onMounted(() => {
     setDayzItemsTableData()
 })
-const editRow = (index) => {
-    console.log(index)
+
+const handleSelectionChange = (val) => {
+    dayzItemsTableSelection.value = val
 }
-const deleteRow = (index) => {
-    console.log(index)
+const deletItemsSelected = () => {
+    const ids = dayzItemsTableSelection.value.map(i => i.ID)
+    deletItemByIDs(ids)
+}
+const editRow = (scope) => {
+    console.log(scope)
+}
+const deleteRow = (scope) => {
+    deletItemByIDs([scope.row.ID])
 }
 const previewImgDialogVisible = ref(false)
 const previewImgDialogUrl = ref()
