@@ -41,7 +41,9 @@ const changeActive = (item) => {
         activeItem.value.push(item)
     } else {
         activeItem.value.splice(i, 1)
+        if (activeItem.value.length == 0) selectAll()
     }
+    emit('submit')
 }
 const getActiveItem = () => {
     return activeItem.value
@@ -82,12 +84,11 @@ defineExpose({
     align-items: center;
     padding: 8px 16px;
     cursor: pointer;
-    transition: all linear .25s;
+    transition: background-color linear .25s;
 
     background-color: #d9ecff;
     color: #858585;
 }
-
 
 .button-item:first-child {
     border-radius: 8px 0 0 8px;

@@ -25,13 +25,13 @@ export default defineConfig({
     VueDevTools(),
     UnoCSS(),
     AutoImport({
+      dts: true,
       imports: [
         {
           vue: [
             'ref', // import { ref } from 'vue',
             'reactive', // import { ref } from 'vue',
             'onMounted',
-            'Ref'
           ],
         },
       ],

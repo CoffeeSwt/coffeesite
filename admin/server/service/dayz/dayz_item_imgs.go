@@ -34,7 +34,7 @@ func (e *DayzItemImgsService) DeleteFile(file dayz.DayzItemImg) (err error) {
 		return
 	}
 	oss := upload.NewOss()
-	if err = oss.DeleteFile(fileFromDb.Key); err != nil {
+	if err = oss.DeleteFile(fileFromDb.FileName); err != nil {
 		return errors.New("文件删除失败")
 	}
 	err = global.GVA_DB.Where("id = ?", file.ID).Unscoped().Delete(&file).Error
@@ -68,17 +68,16 @@ func (e *DayzItemImgsService) GetFileRecordInfoList(info request.PageInfo) (err 
 
 func (e *DayzItemImgsService) UploadFile(header *multipart.FileHeader, noSave string) (err error, file dayz.DayzItemImg) {
 	oss := upload.NewOss()
-	filePath, key, uploadErr := oss.UploadFile(header)
+	filePath, fileName, uploadErr := oss.UploadFile(header)
 	if uploadErr != nil {
 		panic(err)
 	}
 	if noSave == "0" {
 		//s := strings.Split(header.Filename, ".")
 		f := dayz.DayzItemImg{
-			Path: filePath,
-			Name: header.Filename,
-			//Tag:  s[len(s)-1],
-			Key: key,
+			Path:     filePath,
+			Name:     header.Filename,
+			FileName: fileName,
 		}
 		return e.Upload(f), f
 	}

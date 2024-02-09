@@ -1,9 +1,9 @@
 <template>
-    <div class="layout">
-        <header>
+    <div class="layout" flex flex-col w-full h-screen overflow-hidden >
+        <header bg-gray-200>
             <HeaderVue></HeaderVue>
         </header>
-        <main>
+        <main grow bg-gray-300>
             <RouterView></RouterView>
         </main>
         <footer></footer>

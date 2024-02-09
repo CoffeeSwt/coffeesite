@@ -67,7 +67,8 @@
                 </el-form-item>
                 <el-form-item label="物品图片">
                     <el-upload ref="uploadRef" :action="`${path}/dayzItemImg/uploadFile`" list-type="picture-card"
-                        v-model:file-list="imgUploadList" :auto-upload="false" accept=".png, .jpg, .jpeg">
+                        v-model:file-list="imgUploadList" :auto-upload="false" accept=".png, .jpg, .jpeg"
+                        :headers="{ 'x-token': token }" :drag="true" v-model:data="imgUploadData">
                         <el-icon>
                             <Plus />
                         </el-icon>
@@ -104,6 +105,7 @@
     </div>
 </template>
 <script setup lang="js">
+import { useStore } from 'vuex'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getDict } from '@/utils/dictionary'
 import ContentBox from '@/components/global/ContentBox.vue'
@@ -119,6 +121,9 @@ import {
 import * as dayzItemApi from '@/api/dayz/dayzitem'
 import * as dayzItemImgApi from '@/api/dayz/dayzItemImg'
 const path = import.meta.env.VITE_BASE_API
+const store = useStore()
+const token = computed(() => store.state.user.token)
+
 //物品类别
 const dayzItemCategory = ref([])
 const getLabelByIndex = (index) => {
@@ -264,6 +269,10 @@ const editRow = (scope) => {
 const deleteRow = (scope) => {
     deletItemByIDs([scope.row.ID])
 }
+
+const imgUploadData = reactive({
+    
+})
 const previewImgDialogVisible = ref(false)
 const previewImgDialogUrl = ref()
 const imgUploadList = ref([])
@@ -344,6 +353,23 @@ const handleRemove = (file) => {
 .prview-Img {
     width: 100%;
     height: 100%;
+}
+
+:deep(.el-upload--picture-card) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+}
+
+:deep(.el-upload-dragger) {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
 }
 </style>
   
