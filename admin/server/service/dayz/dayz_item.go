@@ -41,7 +41,7 @@ func (dayzItemService *DayzItemService) GetDayzItemQuery(item dayzItemReq.DayzIt
 	db = db.Preload("Imgs")
 	// 如果有条件搜索 下方会自动创建搜索语句
 	if item.Name != "" {
-		db = db.Where("name = ?", item.Name)
+		db = db.Where("name Like ?", "%"+item.Name+"%")
 	}
 	if len(item.Category) > 0 {
 		db = db.Where("category in ?", item.Category)

@@ -24,7 +24,7 @@
                 @selection-change="handleSelectionChange">
                 <el-table-column type="selection"></el-table-column>
 
-                <el-table-column prop="ID" label="ID" width="40" />
+                <!-- <el-table-column prop="ID" label="ID" width="40" /> -->
                 <el-table-column prop="name" label="物品名称" />
                 <el-table-column prop="category" label="类别" />
                 <el-table-column prop="info" label="信息" />
@@ -35,7 +35,7 @@
                 </el-table-column>
                 <el-table-column fixed="right" label="操作">
                     <template #default="scope">
-                        <el-button class="row-button" :icon="Edit" type="primary" size="small" @click="editRow(scope)">
+                        <el-button class="row-button" :icon="Edit" type="primary" size="small" @click="editRow(scope.row)">
                             查看/编辑
                         </el-button>
                         <el-button class="row-button" :icon="Delete" type="danger" size="small" @click="deleteRow(scope)">
@@ -102,6 +102,26 @@
         <el-dialog v-model="previewImgDialogVisible">
             <img class="prview-Img" :src="previewImgDialogUrl" alt="Preview Image" />
         </el-dialog>
+        <!-- 编辑查看详情对话框 -->
+        <el-dialog v-model="editVisible">
+            <div class="detail-box">
+                <header class="detail-header-box">
+                    <div class="item-name">
+                        {{ detailFormData.name }}
+                    </div>
+                    <img class="close-icon" @click="closeDetailBox" src="@/assets/coffee-i/coffee-i-close.svg" alt="">
+                </header>
+                <main class="detail-content-box">
+                    <section class="section-box">
+                        <div class="content left-content">物品类别：{{ detailFormData.category }}</div>
+                        <div class="content right-content">最大堆叠：{{ detailFormData.maxQuantity }}</div>
+                    </section>
+                    <section class="section-box">
+                        <div class="info-content">{{ detailFormData.info }}</div>
+                    </section>
+                </main>
+            </div>
+        </el-dialog>
     </div>
 </template>
 <script setup lang="js">
@@ -123,6 +143,26 @@ import * as dayzItemImgApi from '@/api/dayz/dayzItemImg'
 const path = import.meta.env.VITE_BASE_API
 const store = useStore()
 const token = computed(() => store.state.user.token)
+
+//物品详情对话框
+const editVisible = ref(false)
+const detailFormData = reactive({
+    name: '',
+    category: '',
+    info: '',
+    maxQuantity: 0
+})
+const clearDetailForm = () => {
+    Object.keys(detailFormData).forEach((key) => {
+        detailFormData[key] = addNewItemFormDefault[key]
+    })
+}
+const closeDetailBox = () => {
+    clearDetailForm()
+    editVisible.value = false
+}
+
+
 
 //物品类别
 const dayzItemCategory = ref([])
@@ -215,9 +255,11 @@ const cancelAddNewItemForm = () => {
 }
 
 const useQueryParm = () => {
+    const name = dayzItemCategoryButtonRef.value.getInputName()
     const category = dayzItemCategoryButtonRef.value.getActiveItem()
     const categoryIndex = category.map((label) => dayzItemCategory.value.findIndex((item) => item.label == label) + 1)
     return {
+        name: name,
         pageSize: pageInfo.pageSize,
         page: 1,
         category: categoryIndex
@@ -245,6 +287,16 @@ const dayzItemsTableSelection = ref([])
 const setDayzItemsTableData = async () => {
     const res = await dayzItemApi.getDayzItem(useQueryParm())
     const items = res.data.items
+    if(items.length<=0){
+        ElMessage({
+            message:'未查询到物品，请检查检索条件'
+        })
+    }else{
+        ElMessage({
+            message:`查询到 ${items.length} 个物品`,
+            type:'success'
+        })
+    }
     dayzItemsTableData.value = items.map((i) => {
         return {
             ...i,
@@ -263,15 +315,19 @@ const deletItemsSelected = () => {
     const ids = dayzItemsTableSelection.value.map(i => i.ID)
     deletItemByIDs(ids)
 }
-const editRow = (scope) => {
-    console.log(scope)
+const editRow = (row) => {
+    console.log(row)
+    editVisible.value = true
+    Object.keys(detailFormData).forEach((key) => {
+        detailFormData[key] = row[key]
+    })
 }
 const deleteRow = (scope) => {
     deletItemByIDs([scope.row.ID])
 }
 
 const imgUploadData = reactive({
-    
+
 })
 const previewImgDialogVisible = ref(false)
 const previewImgDialogUrl = ref()
@@ -370,6 +426,75 @@ const handleRemove = (file) => {
     justify-content: center;
     align-items: center;
 
+}
+
+.detail-box {
+    display: flex;
+    flex-direction: column;
+
+    .detail-header-box {
+        min-height: 36px;
+        width: 100%;
+        padding: 8px 16px;
+        margin-bottom: 8px;
+        box-sizing: border-box;
+
+        display: flex;
+        align-items: center;
+
+        .item-name {
+            font-size: 24px;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            flex-grow: 1;
+        }
+
+        .close-icon {
+            cursor: pointer;
+        }
+
+    }
+
+    .detail-content-box {
+        box-sizing: border-box;
+        min-height: 220px;
+        width: 100%;
+        // background-color: #858585;
+
+        .section-box {
+            min-height: 44px;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 8px;
+
+            display: flex;
+
+            .content {
+                flex: auto;
+                display: flex;
+                align-items: center;
+                border: #8585853f solid 1px;
+                border-radius: 8px;
+                padding: 8px;
+                margin: 0 8px;
+
+            }
+
+            .info-content {
+                min-height: 248px;
+                width: 100%;
+                margin: 0 8px;
+                padding: 8px;
+                border: #8585853f solid 1px;
+                border-radius: 8px;
+            }
+
+            .left-content {}
+
+            .right-content {}
+
+
+        }
+    }
 }
 </style>
   

@@ -11,6 +11,12 @@
                 </div>
             </template>
         </div>
+        <div class="input-form">
+            <el-input @clear="handleClear" v-model="inputs" placeholder="请输入物品名称（支持模糊）" size="large" clearable
+                class="input">
+
+            </el-input>
+        </div>
         <el-tooltip content="刷新" placement="top">
             <div class="submit-button" @click="submit">
                 <el-icon>
@@ -21,8 +27,10 @@
     </div>
 </template>
 <script setup lang="js">
+import { Search } from '@element-plus/icons-vue'
 import { computed, ref } from 'vue';
 const contents = ref([])
+const inputs = ref('')
 const emit = defineEmits(['submit'])
 const activeItem = ref([])
 const allItemsSelected = computed(() => {
@@ -60,14 +68,22 @@ const setContents = (content) => {
     selectAll()
 }
 
+const handleClear = () => {
+    emit('submit')
+}
+
 const submit = () => {
     emit('submit')
+}
+const getInputName = () => {
+    return inputs.value
 }
 
 defineExpose({
     getActiveItem,
     selectAll,
-    setContents
+    setContents,
+    getInputName,
 })
 </script>
   
@@ -76,6 +92,16 @@ defineExpose({
     display: flex;
     height: 44px;
     border-radius: 8px;
+}
+
+.input-form {
+    align-self: center;
+    margin: 0 8px;
+
+    .input {
+        width: 320px;
+        height: 44px;
+    }
 }
 
 .button-item {

@@ -23,7 +23,7 @@ type DayzItemImgApi struct{}
 func (u *DayzItemImgApi) UploadFile(c *gin.Context) {
 	var file dayz.DayzItemImg
 	noSave := c.DefaultQuery("noSave", "0")
-	data := c.JSON
+	//data := c.JSON
 	_, header, err := c.Request.FormFile("file")
 	if err != nil {
 		global.GVA_LOG.Error("接收文件失败!", zap.Error(err))
